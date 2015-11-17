@@ -14,7 +14,7 @@ var godnames = [
   { nameReal : "Andy-Rew" , nameGod : "Lord Wensleydale"     },
   { nameReal : "Kush" ,     nameGod : "the hokey dokey"      },
   { nameReal : "Pink" ,     nameGod : "Hathena"              },
-  { nameReal : "Jaime" ,    nameGod : "The Desheather"       },
+  { nameReal : "Jaime" ,    nameGod : "The Desheather"       }
 ];
 
 var data = {};
