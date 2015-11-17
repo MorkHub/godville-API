@@ -27,7 +27,7 @@ var scope;
 God = function( g )
 {
   // httpget = $.get( "god.php", { g: godnames[0].nameGod } );
-  request ( "http://themork.co.uk/gods/god.php?g=" + g, function( error, response, html ){
+  request ( "http://godvillegame.com/gods/" + g, function( error, response, html ){
     if ( !error ) {
       $ = cheerio.load ( html );
       console.log( $( "#column_3 tr" )[0].children[0].children[0].data );
