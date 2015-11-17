@@ -1,0 +1,28 @@
+{
+  "name": "godville-api",
+  "version": "0.0.1",
+  "description": "Simple node-js application to load GodVille data and save to a JSON file.",
+  "main": "server.js",
+  "scripts": {
+    "test": "nodemon server.js",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/MorkHub/godville-API.git"
+  },
+  "keywords": [
+    "godville"
+  ],
+  "author": "Mark Cockburn",
+  "license": "BSD-2-Clause",
+  "bugs": {
+    "url": "https://github.com/MorkHub/godville-API/issues"
+  },
+  "dependencies": {
+    "cheerio": "latest",
+    "express": "latest",
+    "eval": "latest",
+    "string-to-number": "latest"
+  }
+}
