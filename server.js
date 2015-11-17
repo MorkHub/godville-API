@@ -3,6 +3,8 @@ var fs      = require('fs');
 var request = require('request');
 var cheerio = require('cheerio');
 var app     = express();
+var s2n     = require('string-to-number');
+//var _eval    = require('eval');
 
 var godnames = [
   { nameReal : "Mork", nameGod : "TheMork" },
@@ -27,46 +29,54 @@ data.timePretty = new Date().toGMTString();
 data.gods = [];
 
 var day = 1, week = 7, month = 31, year = 365;
-var ten = 10, dozen = 12, hundred = 100, thousand = 1000, million = 1000000, billion = 1000000000
+var ten    = 10,
+  dozen    = 12,
+  hundred  = 100,
+  thousand = 1000,
+  million  = 1000000,
+  billion  = 1000000000
 var temp;
 // var index = 0;
 var ajax;
 var scope;
 var response;
-God = function( g , res )
+God = function( g )
 {
   // httpget = $.get( "god.php", { g: godnames[0].nameGod } );
   request ( "http://themork.co.uk/gods/god.php?g=" + g, function( error, response, html ){
     if ( !error ) {
       $ = cheerio.load ( html );
-      console.log($( "#essential_info h3").children().children());
-      res.send(html);
+      console.log( $( "#column_3 tr" )[0].children[0].children[0].data );
+      console.log( $( "#column_3 tr" )[0].children[0].children[0].data );
+      //console.log("-- found (" + typeof debug + ") -- \n" + debug + "\n-- end --");
+      console.log()
+      //res.send(html);
       scope = this;
       this.nameReal = g;
       this.nameGod = $( "#god h2")[0].children[0].data.trim();
-      this.nameHero = $( "#essential_info h3")[0].innerHTML.trim();
-      this.level = parseInt( $( ".level")[0].innerHTML.trim().replace( "level ", "" ) );
-      this.motto = $( ".motto")[0].innerHTML.trim();
-      this.gender = $( "td.label:contains('Gender')").parent().children()[1].innerHTML.trim();
-      this.ageStr = $( "td.label:contains('Age')").parent().children()[1].innerHTML.trim();
-      this.personality = $( "td.label:contains('Personality')").parent().children()[1].innerHTML.trim();
-      this.guildName = $( ".name.guild a")[0].innerHTML.trim();
-      this.guildRank = $( ".guild_status")[0].innerHTML.replace( "(", "" ).replace( ")", "" ).trim();
-      this.goldStr = $( "td.label:contains('Gold')").parent().children()[1].innerHTML.trim();
-        this.goldNum = eval( "0 " + this.goldStr.replace( "about ", "" ).replace( /[1-9]/g, '+ ' + '$&' + ' * ' ) )
-      this.killedStr = $( "td.label:contains('Monsters Killed')").parent().children()[1].innerHTML.trim();
-        this.killedNum = eval( "0 " + this.killedStr.replace( "about ", "" ).replace( /[1-9]/g, '+ ' + '$&' + ' * ' ) )
-      this.deaths = parseInt( $( "td.label:contains('Death Count')").parent().children()[1].innerHTML.trim() );
-      this.wins = parseInt( $( "td.label:contains('Wins / Losses')").parent().children()[1].innerHTML.trim().replace( / \/ [0-9]*/g, "" ) );
-      this.loses = parseInt( $( "td.label:contains('Wins / Losses')").parent().children()[1].innerHTML.trim().replace( /[0-9]* \/ /g, "" ) );
-      this.bricks = parseInt( $( "td.label:contains('Bricks for Temple')").parent().children()[1].innerHTML.replace( ".", "" ) );
-      // this.pet = $( "td.label:contains('Pet')").parent().children()[1].innerHTML.trim();
+      this.nameHero = $( "#essential_info h3")[0].children[0].data.trim();
+      this.level = parseInt( $( ".level")[0].children[0].data.trim().replace( "level ", "" ) );
+      this.motto = $( ".motto")[0].children[0].data.trim();
+      this.gender = $( "td.label:contains('Gender')")[0].parent.children[3].children[0].data;
+      this.ageStr = $( "td.label:contains('Age')")[0].parent.children[3].children[0].data;
+      this.personality = $( "td.label:contains('Personality')").parent().children()[1].children[0].data.trim();
+      this.guildName = $( ".name.guild a")[0].children[0].data.trim();
+      this.guildRank = $( ".guild_status")[0].children[0].data.trim().replace( "(", "" ).replace( ")", "" ).trim();
+      this.goldStr = $( "td.label:contains('Gold')").parent().children()[1].children[0].data.trim();
+        this.goldNum = s2n( "0 " + this.goldStr.replace( "about ", "" ).replace( /[1-9]/g, '+ ' + '$&' + ' * ' ) )
+      this.killedStr = $( "td.label:contains('Monsters Killed')").parent().children()[1].children[0].data.trim();
+        this.killedNum = s2n( "0 " + this.killedStr.replace( "about ", "" ).replace( /[1-9]/g, '+ ' + '$&' + ' * ' ) )
+      this.deaths = parseInt( parseInt( $( "td.label:contains('Death Count')").parent().children()[1].children[0].data ) );
+      this.wins = parseInt( $( "td.label:contains('Wins / Losses')")[0].parent.children[3].children[0].data.trim().replace( / \/ [0-9]*/g, "" ) );
+      this.loses = parseInt( $( "td.label:contains('Wins / Losses')")[0].parent.children[3].children[0].data.trim().replace( /[0-9]* \/ /g, "" ) );
+      this.bricks = parseInt( $( "td.label:contains('Bricks for Temple')").parent().children()[1].children[0].data.replace( ".", "" ) );
+      // this.pet = $( "td.label:contains('Pet')").parent().children()[1].children[0].data.trim();
       this.equipment = [];
       $( "#column_2 tr").each(function( index ) {
         scope.equipment.push({
-          label : $( this ).children()[0].innerHTML,
-          name : $( this ).children()[1].innerHTML,
-          value : parseInt( $( this ).children()[2].innerHTML.replace( "+", "" ) )
+          label : this.children[1].children[0].data,
+          name :  this.children[3].children[0].data,
+          value : parseInt( this.children[5].children[0].data.replace( "+", "" ) )
         });
       });
       this.skills = [];
@@ -79,11 +89,11 @@ God = function( g , res )
       });
       this.pantheons = [];
       $( "#column_3 tr").each(function( index ) {
-        item = $( this );
-        if ( $( this ).children()[0].innerHTML !== '<div class="panth_div"></div>' ) {
+        item = this;
+        if ( this.children[0] !== '<div class="panth_div"></div>' ) {
           scope.pantheons.push({
-            name : $( item ).children()[0].innerHTML,
-            rank : $( item ).children()[1].innerHTML
+            name : this.children[0].children[0].data,
+            rank : this.children[1].children[0].data
           });
         }
       });
@@ -96,24 +106,24 @@ God = function( g , res )
         });
       });
     }
-  }.bind(this) );
+  }.bind(this));
 }
 
-app.get('/collect', function(req, res){
-  response = res;
+//app.get('/', function(req, res){
+  //response = res;
   godnames.forEach( function(x){
-    console.log( "urls.forEach: " + 'http://themork.co.uk/gods/god.php?g=' + x.nameGod );
-    data.gods.push( new God ( x.nameGod ,res ) );
+    //console.log( "urls.forEach: " + 'http://themork.co.uk/gods/god.php?g=' + x.nameGod );
+    data.gods.push( new God ( x.nameGod ) );
   });
-  console.log( "data: " + data );
   function wait(){
     if (!data.gods[godnames.length-1].nameHero){
       setTimeout(wait,100);
     } else {
+      console.log(JSON.stringify(data));
       fs.writeFile( 'data.json' , JSON.stringify( data , null , 4 ), function( err ){ console.error( "Error: " + err ); } )
     }
   }
-});
+//});
 app.listen(8080, function(){
   console.log("running");
 })
