@@ -5,36 +5,31 @@ var cheerio = require('cheerio');
 var app     = express();
 var s2n     = require('string-to-number');
 
+var outfile = "data.json";
 var godnames = [
-  { nameReal : "Mork", nameGod : "TheMork" },
-  { nameReal : "Shwam", nameGod : "Lord Shwam The Third" },
-  { nameReal : "Cobnot", nameGod : "God Of Shenanigans" },
-  { nameReal : "Olive", nameGod : "Flannel Of happiness" },
-  { nameReal : "Andy-Rew", nameGod : "Lord Wensleydale" },
-  { nameReal : "Kush", nameGod : "the hokey dokey" },
-  { nameReal : "Pink", nameGod : "Hathena" },
-  { nameReal : "Jaime", nameGod : "The Desheather" },
+  { nameReal : "Mork" ,     nameGod : "TheMork"              },
+  { nameReal : "Shwam" ,    nameGod : "Lord Shwam The Third" },
+  { nameReal : "Cobnot" ,   nameGod : "God Of Shenanigans"   },
+  { nameReal : "Olive" ,    nameGod : "Flannel Of happiness" },
+  { nameReal : "Andy-Rew" , nameGod : "Lord Wensleydale"     },
+  { nameReal : "Kush" ,     nameGod : "the hokey dokey"      },
+  { nameReal : "Pink" ,     nameGod : "Hathena"              },
+  { nameReal : "Jaime" ,    nameGod : "The Desheather"       },
 ];
-var req;
-var pages = [];
+
 var data = {};
 data.time = Date.now();
 data.timePretty = new Date().toGMTString();
 data.gods = [];
-var temp;
-// var index = 0;
 var scope;
 God = function( g )
 {
-  // httpget = $.get( "god.php", { g: godnames[0].nameGod } );
   request ( "http://godvillegame.com/gods/" + g, function( error, response, html ){
     if ( !error ) {
       $ = cheerio.load ( html );
       console.log( $( "#column_3 tr" )[0].children[0].children[0].data );
       console.log( $( "#column_3 tr" )[0].children[0].children[0].data );
-      //console.log("-- found (" + typeof debug + ") -- \n" + debug + "\n-- end --");
       console.log()
-      //res.send(html);
       scope = this;
       this.nameReal = g;
       this.nameGod = $( "#god h2")[0].children[0].data.trim();
@@ -94,9 +89,7 @@ God = function( g )
 }
 
 //app.get('/', function(req, res){
-  //response = res;
   godnames.forEach( function(x){
-    //console.log( "urls.forEach: " + 'http://themork.co.uk/gods/god.php?g=' + x.nameGod );
     data.gods.push( new God ( x.nameGod ) );
   });
   function wait(){
@@ -104,10 +97,8 @@ God = function( g )
       setTimeout(wait,100);
     } else {
       console.log(JSON.stringify(data));
-      fs.writeFile( 'data.json' , JSON.stringify( data , null , 4 ), function( err ){ console.error( "Error: " + err ); } )
+      fs.writeFile( outfile , JSON.stringify( data , null , 4 ), function( err ){ console.error( "Error: " + err ); } )
     }
   }
 //});
-app.listen(8080, function(){
-  console.log("running");
-})
+app.listen( 8080 , function() { console.log( "running" ) } );
