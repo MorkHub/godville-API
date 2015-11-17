@@ -4,7 +4,6 @@ var request = require('request');
 var cheerio = require('cheerio');
 var app     = express();
 var s2n     = require('string-to-number');
-//var _eval    = require('eval');
 
 var godnames = [
   { nameReal : "Mork", nameGod : "TheMork" },
@@ -17,29 +16,14 @@ var godnames = [
   { nameReal : "Jaime", nameGod : "The Desheather" },
 ];
 var req;
-function getProfile ( g )
-{
-  return $.get( "god.php", { g: g } ).done(function(data) { a = data; });
-}
-
 var pages = [];
 var data = {};
 data.time = Date.now();
 data.timePretty = new Date().toGMTString();
 data.gods = [];
-
-var day = 1, week = 7, month = 31, year = 365;
-var ten    = 10,
-  dozen    = 12,
-  hundred  = 100,
-  thousand = 1000,
-  million  = 1000000,
-  billion  = 1000000000
 var temp;
 // var index = 0;
-var ajax;
 var scope;
-var response;
 God = function( g )
 {
   // httpget = $.get( "god.php", { g: godnames[0].nameGod } );
@@ -70,7 +54,7 @@ God = function( g )
       this.wins = parseInt( $( "td.label:contains('Wins / Losses')")[0].parent.children[3].children[0].data.trim().replace( / \/ [0-9]*/g, "" ) );
       this.loses = parseInt( $( "td.label:contains('Wins / Losses')")[0].parent.children[3].children[0].data.trim().replace( /[0-9]* \/ /g, "" ) );
       this.bricks = parseInt( $( "td.label:contains('Bricks for Temple')").parent().children()[1].children[0].data.replace( ".", "" ) );
-      // this.pet = $( "td.label:contains('Pet')").parent().children()[1].children[0].data.trim();
+      if( $( "td.label:contains('Pet')").length > 0 ) { this.pet = $( "td.label:contains('Pet')").parent().children()[1].children[0].data.trim(); }
       this.equipment = [];
       $( "#column_2 tr").each(function( index ) {
         scope.equipment.push({
