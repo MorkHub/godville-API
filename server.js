@@ -30,12 +30,18 @@ function getScore( god )
   );
 }
 
-var data = {};
-data.time = Date.now();
-data.timePretty = new Date().toGMTString();
-data.data = [];
+var data;
 var scope;
 var error;
+function init()
+{
+  data = {};
+  data.time = Date.now();
+  data.timePretty = new Date().toGMTString();
+  data.data = [];
+  scope;
+  error;
+}
 God = function( g )
 {
   request ( "http://godvillegame.com/gods/" + g.nameGod, function( e, response, html ){
@@ -46,6 +52,7 @@ God = function( g )
       this.nameReal = g.nameReal;
       this.nameGod = $( "#god h2")[0].children[0].data.trim();
       this.nameHero = $( "#essential_info h3")[0].children[0].data.trim();
+      this.avatarURL = $("#avatar img")[0].attribs.src;
       this.level = parseInt( $( ".level")[0].children[0].data.trim().replace( "level ", "" ) );
       this.motto = $( ".motto")[0].children[0].data.trim();
       this.gender = $( "td.label:contains('Gender')")[0].parent.children[3].children[0].data;
@@ -56,12 +63,11 @@ God = function( g )
       this.guildName = $( ".name.guild a")[0].children[0].data.trim();
       this.guildRank = $( ".guild_status")[0].children[0].data.trim().replace( "(", "" ).replace( ")", "" ).trim();
       this.goldStr = $( "td.label:contains('Gold')").parent().children()[1].children[0].data.trim();
-      //this.goldNum = s2n.convert( "0 " + this.goldStr.replace( "about ", "" ).replace( /[1-9]/g, '+ ' + '$&' + ' * ' ) );
       this.goldNum = 0;
-      this.goldNum = s2n.convert( this.goldStr.replace("about ","") );
+      this.goldNum = s2n.convert( this.goldStr.replace(/about ([1-9]*)/g,"$1") );
       this.killedStr = $( "td.label:contains('Monsters Killed')").parent().children()[1].children[0].data.trim();
-      //this.killedNum = s2n.convert( "0 " + this.killedStr.replace( "about ", "" ).replace( /[1-9]/g, '+ ' + '$&' + ' * ' ) );
-      this.killedNum = s2n.convert( this.killedStr.replace("about","").trim() );
+      //console.log( "   " + this.goldStr.replace("about ","").replace(/.* one .*/g,"1") + " * " + this.goldStr.replace(/about (.?*) (.?*)/g,"$2") )
+      this.killedNum = parseInt ( this.goldStr.replace("about","").replace(/one/g,"1") ) * parseInt ( s2n.convert( this.goldStr.replace(/about [1-9]* /g,"") ) );
       this.deaths = parseInt( parseInt( $( "td.label:contains('Death Count')").parent().children()[1].children[0].data ) );
       this.wins = parseInt( $( "td.label:contains('Wins / Losses')")[0].parent.children[3].children[0].data.trim().replace( / \/ [0-9]*/g, "" ) );
       this.loses = parseInt( $( "td.label:contains('Wins / Losses')")[0].parent.children[3].children[0].data.trim().replace( /[0-9]* \/ /g, "" ) );
@@ -126,7 +132,9 @@ God = function( g )
   }.bind(this));
 }
 
-//app.get('/', function(req, res){
+function generate()
+{
+  init();
   godnames.forEach( function(x){
     data.data.push( new God ( x ) );
   });
@@ -142,10 +150,15 @@ God = function( g )
     } else {
       if ( !error )
       {
-        //console.log( JSON.stringify( data ) );
         fs.writeFile( outfile , JSON.stringify( data , null , 4 ), function( err ){ if ( err ) { console.error( "Error: " + err ) } else { console.log( "Saved successfully!" ) } } )
       }
     }
   }
-//});
+}
+function run( minutes )
+{
+  generate();
+  setTimeout( run , minutes *  60 * 1000 );
+}
+app.get( '/refresh', function (req,res) { generate(); } );
 app.listen( 8080 , function() { console.log( "running" ) } );
