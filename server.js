@@ -2,6 +2,7 @@ var express          = require('express');
 var request          = require('request');
 var cheerio          = require('cheerio');
 var fs               = require('fs');
+var i2s              = require('integer-to-words');
 var string_to_number = require('string-to-number');
 var s2n              = new string_to_number();
 var app              = express();
@@ -62,12 +63,19 @@ God = function( g )
       this.personality = $( "td.label:contains('Personality')").parent().children()[1].children[0].data.trim();
       this.guildName = $( ".name.guild a")[0].children[0].data.trim();
       this.guildRank = $( ".guild_status")[0].children[0].data.trim().replace( "(", "" ).replace( ")", "" ).trim();
+      //this.guildRankNext = { name: $( ".guild .d_date" )[0].children[0].data.replace(/― (day|days)/g,"").trim(), days: $( ".guild .d_date" )[0].children[0].data.replace(/[a-z]* ― ([0-9])* days/g, parseInt("$1")).trim() }
       this.goldStr = $( "td.label:contains('Gold')").parent().children()[1].children[0].data.trim();
-      this.goldNum = 0;
-      this.goldNum = s2n.convert( this.goldStr.replace(/about ([1-9]*)/g,"$1") );
+        tempG = ( this.goldStr.replace( "about" , "").replace( /(dozen|hundred|thousand|million)/g,"" ).trim().replace("none", "0") )
+        tempG = isNaN( parseInt( tempG ) ) ? tempG : i2s ( parseInt( tempG ) );
+        tempG = tempG + " " + this.goldStr.replace(/about* [a-z]*[0-9]* /g, "");
+        tempG = s2n.convert( tempG );
+        this.goldNum = tempG == undefined ? 0 : tempG;
       this.killedStr = $( "td.label:contains('Monsters Killed')").parent().children()[1].children[0].data.trim();
-      //console.log( "   " + this.goldStr.replace("about ","").replace(/.* one .*/g,"1") + " * " + this.goldStr.replace(/about (.?*) (.?*)/g,"$2") )
-      this.killedNum = parseInt ( this.goldStr.replace("about","").replace(/one/g,"1") ) * parseInt ( s2n.convert( this.goldStr.replace(/about [1-9]* /g,"") ) );
+        tempK = ( this.killedStr.replace( "about" , "").replace( /(dozen|hundred|thousand|million)/g,"" ).trim().replace("none", "0") )
+        tempK = isNaN( parseInt( tempK ) ) ? tempG : i2s ( parseInt( tempK ) );
+        tempK = tempK + " " + this.killedStr.replace(/about* [a-z]*[0-9]* /g, "");
+        tempK = s2n.convert( tempK );
+        this.killedNum = tempK == undefined ? 0 : tempK;
       this.deaths = parseInt( parseInt( $( "td.label:contains('Death Count')").parent().children()[1].children[0].data ) );
       this.wins = parseInt( $( "td.label:contains('Wins / Losses')")[0].parent.children[3].children[0].data.trim().replace( / \/ [0-9]*/g, "" ) );
       this.loses = parseInt( $( "td.label:contains('Wins / Losses')")[0].parent.children[3].children[0].data.trim().replace( /[0-9]* \/ /g, "" ) );
@@ -126,39 +134,37 @@ God = function( g )
           + Math.sqrt(this.goldNum/10)
           - (this.deaths*this.deaths)*3);
       this.done = true;
-
-      if ( this.done ) console.log( scope );
     } else { console.log ( error = e ); }
   }.bind(this));
 }
 
-function generate()
+function generate( res )
 {
   init();
-  godnames.forEach( function(x){
-    data.data.push( new God ( x ) );
-  });
-  wait()
+  godnames.forEach( function(x){ data.data.push( new God ( x ) ) });
+  wait();
   var complete;
   function wait(){
-    complete = 0
+    complete = 0;
     data.data.forEach(function(e){
       if ( e.done ) complete++;
-    })
+    });
     if ( complete < data.data.length ){
       setTimeout( wait , 100 );
     } else {
       if ( !error )
       {
-        fs.writeFile( outfile , JSON.stringify( data , null , 4 ), function( err ){ if ( err ) { console.error( "Error: " + err ) } else { console.log( "Saved successfully!" ) } } )
+        fs.writeFile( outfile , JSON.stringify( data , null , 4 ), function( err ){ if ( err ) { console.error( "Error: " + err ) } else { /*console.log( "Saved successfully!" )*/ } } )
+				if ( res ) { res.redirect( "http://themork.co.uk/gods" ) }
       }
     }
   }
 }
-function run( minutes )
+function run( n ) // schedule update script for every n minutes
 {
   generate();
-  setTimeout( run , minutes *  60 * 1000 );
+  setTimeout( run , n *  60 * 1000 );
 }
-app.get( '/refresh', function (req,res) { generate(); } );
-app.listen( 8080 , function() { console.log( "running" ) } );
+app.enable('trust proxy');
+app.get( '/refresh', function (req,res) { generate(res); var date = new Date; console.log( req.ip + ' - - ['+ date.toLocaleDateString() + ":" + date.toLocaleTimeString().replace(/ (PM|AM)/g, "") + '] "' + req.method + " " + req.originalUrl + '"' ); } );
+app.listen( 8080 , function() { console.log( "running" ); generate(); } );

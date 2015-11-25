@@ -22,7 +22,8 @@
   "dependencies": {
     "express": "latest",
     "cheerio": "latest",
+    "request": "latest",
     "string-to-number": "latest",
-    "request": "latest"
+    "integer-to-words": "latest"
   }
 }
