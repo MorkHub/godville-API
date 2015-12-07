@@ -6,8 +6,9 @@ var i2s              = require('integer-to-words');
 var string_to_number = require('string-to-number');
 var s2n              = new string_to_number();
 var app              = express();
+var port             = 25565;
 
-var outfile = "C:/wamp/www/gods/data.json";
+var outfile = "/home/mork/apache/www/gods/data.json";
 var godnames = [
   { nameReal : "Mork" ,     nameGod : "TheMork"              },
   { nameReal : "Shwam" ,    nameGod : "Lord Shwam The Third" },
@@ -60,9 +61,13 @@ God = function( g )
       this.ageStr = $( "td.label:contains('Age')")[0].parent.children[3].children[0].data;
       this.ageHours = 0;
       this.ageHours = s2n.convert( this.ageStr.replace("about ","") );
-      this.personality = $( "td.label:contains('Personality')").parent().children()[1].children[0].data.trim();
-      this.guildName = $( ".name.guild a")[0].children[0].data.trim();
-      this.guildRank = $( ".guild_status")[0].children[0].data.trim().replace( "(", "" ).replace( ")", "" ).trim();
+      this.personality = $( "td.label:contains('Personality')").parent().children()[1].children[0].data.trim() || "none";
+      //console.log ( $( ".guild_status " ) );
+      if ( $( ".name.guild a" ).length > 0 ) {
+        this.guildName = $( ".name.guild a" )[0].children[0].data.trim();
+        //console.log ( $( ".guild_status"  )[0].children[0].data );
+        this.guildRank = $( ".guild_status")[0].children[0].data.trim().replace( "(", "" ).replace( ")", "" ).trim();
+      } else { this.guildName = "none"; this.guildRank = "none";}
       //this.guildRankNext = { name: $( ".guild .d_date" )[0].children[0].data.replace(/― (day|days)/g,"").trim(), days: $( ".guild .d_date" )[0].children[0].data.replace(/[a-z]* ― ([0-9])* days/g, parseInt("$1")).trim() }
       this.goldStr = $( "td.label:contains('Gold')").parent().children()[1].children[0].data.trim();
         tempG = ( this.goldStr.replace( "about" , "").replace( /(dozen|hundred|thousand|million)/g,"" ).trim().replace("none", "0") )
@@ -111,9 +116,9 @@ God = function( g )
         item = this;
         if ( this.children[0].attribs.colspan == undefined ) {
           var tempName, tempRank;
-          if ( this.children[0].attribs.class ) tempName = this.children[0].children[0].data;
-          if ( this.children[1].attribs.class ) tempRank =  this.children[1].children[0].data;
-          if ( this.children[1].attribs.class ) scope.pantheons.push( { name : tempName, rank : tempRank } );
+	  if ( this.children[1] ) tempName = this.children[0].children[0].data;
+          if ( this.children[1] ) tempRank = this.children[1].children[0].data;
+          if ( this.children[1] ) scope.pantheons.push( { name : tempName, rank : tempRank } );
         }
       });
       this.achievements = [];
@@ -140,6 +145,7 @@ God = function( g )
 
 function generate( res )
 {
+  process.stdout.write ( "Collecting data... " );
   init();
   godnames.forEach( function(x){ data.data.push( new God ( x ) ) });
   wait();
@@ -154,17 +160,19 @@ function generate( res )
     } else {
       if ( !error )
       {
+        process.stdout.write( "complete.\n" );
         fs.writeFile( outfile , JSON.stringify( data , null , 4 ), function( err ){ if ( err ) { console.error( "Error: " + err ) } else { /*console.log( "Saved successfully!" )*/ } } )
 				if ( res ) { res.redirect( "http://themork.co.uk/gods" ) }
       }
     }
   }
 }
-function run( n ) // schedule update script for every n minutes
+function run( ) // schedule update script every 10 minutes
 {
   generate();
-  setTimeout( run , n *  60 * 1000 );
+  setTimeout( run , 10 * 60 * 1000 );
 }
 app.enable('trust proxy');
 app.get( '/refresh', function (req,res) { generate(res); var date = new Date; console.log( req.ip + ' - - ['+ date.toLocaleDateString() + ":" + date.toLocaleTimeString().replace(/ (PM|AM)/g, "") + '] "' + req.method + " " + req.originalUrl + '"' ); } );
-app.listen( 8080 , function() { console.log( "running" ); generate(); } );
+app.listen( port , function() { console.log( "Running on *:" + port ); run() } );
+

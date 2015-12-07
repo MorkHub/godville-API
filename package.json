@@ -23,7 +23,6 @@
     "express": "latest",
     "cheerio": "latest",
     "request": "latest",
-    "string-to-number": "latest",
-    "integer-to-words": "latest"
+    "string-to-number": "latest"
   }
 }
